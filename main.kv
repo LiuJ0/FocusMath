@@ -1,0 +1,671 @@
+  
+#:set max_menu_button_scale '500dp', '450dp'
+#:set min_menu_button_scale '400dp', '200dp'
+#:import configparser configparser
+#:import os os
+#:import Window kivy.core.window.Window
+
+<HomeScreen>:
+    on_size: root.on_resize()
+    id: main_screen
+#   Background
+    canvas.before:
+        Color:
+            rgba: app.theme.color_background
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+#       Camera view, ripped off stack exchange idk what it does
+        Widget:
+            id: proxy
+            Camera:
+                id: camera
+                center: self.size and proxy.center
+                size: proxy.height, proxy.width
+                resolution: 1920, 1080
+                canvas.before:
+                    PushMatrix:
+                    Rotate:
+                        angle: -90
+                        origin: self.center
+                canvas.after:
+                    PopMatrix:
+#       Floating interface
+#       Shutter
+        Button:
+            size_hint: None, None
+            pos: root.width/2 - self.width/2,170 * root.height/1920
+            size: 250 * root.height/1920,250 * root.height/1920
+            background_color: (0, 0, 0, 0)
+            on_press: root.capture()
+            Image:
+                size: self.parent.size
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "camera.png")
+                pos: self.parent.pos
+                allow_stretch: True
+                color: app.theme.color_neutral
+#       Files
+        Button:
+            size_hint: None, None
+            background_color: (0, 0, 0, 0)
+            pos: 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 93 *(((root.width / 1080) + (root.height / 1920))/2)
+            on_press:
+                root.manager.transition.direction = 'up'
+                root.manager.current = 'files'
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "file.png")
+                allow_stretch: True
+                color: app.theme.color_neutral
+#       Open Image
+        Button:
+            size_hint: None, None
+            background_color: (0, 0, 0, 0)
+            pos: root.width / 2 - self.width / 2, root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 95 *(((root.width / 1080) + (root.height / 1920))/2)
+            on_press:
+                root.open_image()
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "open_no_border.png")
+                allow_stretch: True
+                color: app.theme.color_neutral
+#       Settings
+        Button:
+            size_hint: None, None
+            pos: root.width - self.width - 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 93 *(((root.width / 1080) + (root.height / 1920))/2)
+            background_color: (0, 0, 0, 0)
+            on_press:
+                root.manager.transition.direction = 'down'
+                root.manager.current = 'settings'
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "settings.png")
+                allow_stretch: True
+                color: app.theme.color_neutral
+
+<ImageErrorPopup>
+    width: Window.width -120 * (((Window.width / 1080) + (Window.height / 1920)) / 2)
+    size_hint: None, None
+    background: os.path.join("themes", app.theme.theme_folder, "boxes", "nothing.png")
+    height: popup_layout.height
+    RelativeLayout:
+        width: self.parent.width
+        id: popup_layout
+        height: error_message.height + close.height + 330 * (((Window.width / 1080) + (Window.height / 1920))/2)
+        canvas.before:
+            Color:
+                rgba: app.theme.color_neutral_muted
+            BorderImage
+                size: root.size
+                pos: 0, 0
+                border: 16, 16, 16, 16
+                source: os.path.join("themes", app.theme.theme_folder, "boxes", "full.png")
+        Label:
+            id: error_message
+            halign: "center"
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.width / 2 - (self.width/2)
+            y: 335 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "WE CAN'T READ THIS IMAGE, PLEASE TRY AGAIN"
+            font_name: "main"
+            text_size: Window.width - 240 * (((Window.width / 1080) + (Window.height / 1920))/2), None
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+
+        Label:
+            id: close
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.width / 2 - (self.width/2)
+            y: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "RETAKE"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+            Button:
+                size_hint: None, None
+                size: 145 * (((Window.width / 1080) + (Window.height / 1920))/2), 145 *(((Window.width / 1080) + (Window.height / 1920))/2)
+                x: self.parent.x + 1/2 * self.parent.width - 1/2 * self.width
+                y: self.parent.y + self.parent.height + 10 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                background_color: (0, 0, 0, 0)
+                on_press:
+                    root.dismiss()
+                Image:
+                    height: self.parent.height
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    source: os.path.join("themes", app.theme.theme_folder, "icons", "close.png")
+                    allow_stretch: True
+                    color: app.theme.color_neutral_muted
+
+<CapturePopup>
+    width: Window.width -120 * (((Window.width / 1080) + (Window.height / 1920)) / 2)
+    size_hint: None, None
+    background: os.path.join("themes", app.theme.theme_folder, "boxes", "nothing.png")
+    FloatLayout:
+        id: popup_layout
+        canvas.before:
+            Color:
+                rgba: app.theme.color_neutral_muted
+            BorderImage
+                size: root.size
+                pos: root.pos
+                border: 16, 16, 16, 16
+                source: os.path.join("themes", app.theme.theme_folder, "boxes", "full.png")
+        Label:
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.x + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            y: self.parent.y + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "RETAKE"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+            Button:
+                size_hint: None, None
+                size: 145 * (((Window.width / 1080) + (Window.height / 1920))/2), 145 *(((Window.width / 1080) + (Window.height / 1920))/2)
+                x: self.parent.x + 1/2 * self.parent.width - 1/2 * self.width
+                y: self.parent.y + self.parent.height + 10 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                background_color: (0, 0, 0, 0)
+                on_press:
+                    root.dismiss()
+                Image:
+                    height: self.parent.height
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    source: os.path.join("themes", app.theme.theme_folder, "icons", "close.png")
+                    allow_stretch: True
+                    color: app.theme.color_neutral_muted
+        Label:
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.x + self.parent.width / 2 - (self.width/2)
+            y: self.parent.y + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "CHECK"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+            Button:
+                size_hint: None, None
+                size: 145 * (((Window.width / 1080) + (Window.height / 1920))/2), 145 *(((Window.width / 1080) + (Window.height / 1920))/2)
+                x: self.parent.x + 1/2 * self.parent.width - 1/2 * self.width
+                y: self.parent.y + self.parent.height + 10 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                background_color: (0, 0, 0, 0)
+                on_press:
+                    root.check()
+                Image:
+                    height: self.parent.height
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    source: os.path.join("themes", app.theme.theme_folder, "icons", "check.png")
+                    allow_stretch: True
+                    color: app.theme.color_wrong
+        Label:
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.x + self.parent.width - self.width - 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            y: self.parent.y + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "SOLVE"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+            Button:
+                size_hint: None, None
+                size: 145 * (((Window.width / 1080) + (Window.height / 1920))/2), 145 *(((Window.width / 1080) + (Window.height / 1920))/2)
+                x: self.parent.x + 1/2 * self.parent.width - 1/2 * self.width
+                y: self.parent.y + self.parent.height + 10 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                background_color: (0, 0, 0, 0)
+                on_press: root.solve()
+                Image:
+                    height: self.parent.height
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    source: os.path.join("themes", app.theme.theme_folder, "icons", "solve.png")
+                    allow_stretch: True
+                    color: app.theme.color_right
+        Label:
+            id: title_label
+            size_hint: None, None
+            halign: "center"
+            y: self.parent.y + self.parent.height - self.height - 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            x: self.parent.x + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            width: Window.width - 240 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            height: self.texture_size[1]
+            text_size: self.width, None
+            text: "HERE'S WHAT WE CAPTURED:"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+        ScrollView:
+            size_hint: None, None
+            x: self.parent.x + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            y: self.parent.y + 320 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            width: self.parent.width - 120 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            id: image_scroll_view
+
+<FileScreen>:
+    id: file_screen
+#   Background
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+#   Navbar
+    FloatLayout:
+#       Back
+        Button:
+            size_hint: None, None
+            background_color: (0, 0, 0, 0)
+            pos: 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 93 *(((root.width / 1080) + (root.height / 1920))/2)
+            on_press:
+                root.manager.transition.direction = 'down'
+                root.manager.current = root.back()
+
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "back.png")
+                allow_stretch: True
+                color: app.theme.color_neutral_muted
+#       Home
+        Button:
+            size_hint: None, None
+            pos: root.width - self.width - 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 95 *(((root.width / 1080) + (root.height / 1920))/2)
+            background_color: (0, 0, 0, 0)
+            on_press:
+                root.manager.transition.direction = 'down'
+                root.manager.current = 'home'
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "home.png")
+                allow_stretch: True
+                color: app.theme.color_neutral_muted
+        Label:
+            size_hint: None, None
+            pos: root.width / 2 - self.width / 2, root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: root.width - 300 * (root.width / 1080), 95 *(((root.width / 1080) + (root.height / 1920))/2)
+            text: "CHOOSE A FILE:"
+            font_name: "main"
+            font_size: 60 * (((root.width / 1080) + (root.height / 1920))/2)
+            color: app.theme.color_neutral
+    ScrollView:
+        do_scroll_x: False
+        size_hint: None, None
+        width: root.width - (60 * (((root.width / 1080) + (root.height / 1920))/2))
+        height: root.height - ((205 + 155) * (((root.width / 1080) + (root.height / 1920))/2))
+        x: 30 * (((root.width / 1080) + (root.height / 1920))/2)
+        y: 205 *(((root.width / 1080) + (root.height / 1920))/2)
+        BoxLayout:
+            size_hint_y: None
+            orientation: "vertical"
+            size_hint_x: 1
+            spacing: 40 * (((root.width / 1080) + (root.height / 1920))/2)
+            id: file_chooser
+
+#Bottom Buttons
+    FloatLayout:
+# Open
+        Button:
+            size_hint: None, None
+            id: select
+            size: 145 * (((root.width / 1080) + (root.height / 1920))/2), 145 *(((root.width / 1080) + (root.height / 1920))/2)
+            background_color: (0, 0, 0, 0)
+            x: root.width - self.width - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            y: 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            on_press:
+                root.open()
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "open.png")
+                allow_stretch: True
+# Select label
+        Label:
+            size_hint: None, None
+            size: self.texture_size
+            y: (30 + 72.5)*(((root.width / 1080) + (root.height / 1920))/2) - self.height / 2
+            x: root.width - self.width - 185 * (((root.width / 1080) + (root.height / 1920))/2)
+            text: "OPEN"
+            font_name: "main"
+            font_size: 60 * (((root.width / 1080) + (root.height / 1920))/2)
+            color: app.theme.color_neutral
+# Trash
+        Button:
+            size_hint: None, None
+            size: 145 * (((root.width / 1080) + (root.height / 1920))/2), 145 *(((root.width / 1080) + (root.height / 1920))/2)
+            pos: 30 * (((root.width / 1080) + (root.height / 1920))/2), 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            background_color: (0, 0, 0, 0)
+            on_press:
+                root.delete()
+            Image:
+                height: self.parent.height
+                pos: self.parent.pos
+                size: self.parent.size
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "trash.png")
+                allow_stretch: True
+                color: app.theme.color_wrong
+
+<FileOpenPopup>
+    width: Window.width -120 * (((Window.width / 1080) + (Window.height / 1920)) / 2)
+    size_hint: None, None
+    background: os.path.join("themes", app.theme.theme_folder, "boxes", "nothing.png")
+    FloatLayout:
+        id: popup_layout
+        canvas.before:
+            Color:
+                rgba: app.theme.color_neutral_muted
+            BorderImage
+                size: root.size
+                pos: root.pos
+                border: 16, 16, 16, 16
+                source: os.path.join("themes", app.theme.theme_folder, "boxes", "full.png")
+        Label:
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.x + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            y: self.parent.y + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "CLOSE"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+            Button:
+                size_hint: None, None
+                size: 145 * (((Window.width / 1080) + (Window.height / 1920))/2), 145 *(((Window.width / 1080) + (Window.height / 1920))/2)
+                x: self.parent.x + 1/2 * self.parent.width - 1/2 * self.width
+                y: self.parent.y + self.parent.height + 10 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                background_color: (0, 0, 0, 0)
+                on_press:
+                    root.dismiss()
+                Image:
+                    height: self.parent.height
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    source: os.path.join("themes", app.theme.theme_folder, "icons", "close.png")
+                    allow_stretch: True
+                    color: app.theme.color_neutral_muted
+        Label:
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.x + self.parent.width / 2 - (self.width/2)
+            y: self.parent.y + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "CHECK"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+            Button:
+                size_hint: None, None
+                size: 145 * (((Window.width / 1080) + (Window.height / 1920))/2), 145 *(((Window.width / 1080) + (Window.height / 1920))/2)
+                x: self.parent.x + 1/2 * self.parent.width - 1/2 * self.width
+                y: self.parent.y + self.parent.height + 10 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                background_color: (0, 0, 0, 0)
+                on_press:
+                Image:
+                    height: self.parent.height
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    source: os.path.join("themes", app.theme.theme_folder, "icons", "check.png")
+                    allow_stretch: True
+                    color: app.theme.color_wrong
+        Label:
+            size_hint: None, None
+            size: self.texture_size
+            x: self.parent.x + self.parent.width - self.width - 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            y: self.parent.y + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            text: "SOLVE"
+            font_name: "main"
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            color: app.theme.color_neutral
+            Button:
+                size_hint: None, None
+                size: 145 * (((Window.width / 1080) + (Window.height / 1920))/2), 145 *(((Window.width / 1080) + (Window.height / 1920))/2)
+                x: self.parent.x + 1/2 * self.parent.width - 1/2 * self.width
+                y: self.parent.y + self.parent.height + 10 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                background_color: (0, 0, 0, 0)
+                on_press:
+                Image:
+                    height: self.parent.height
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    source: os.path.join("themes", app.theme.theme_folder, "icons", "solve.png")
+                    allow_stretch: True
+                    color: app.theme.color_right
+        ScrollView:
+            do_scroll_x: False
+            size_hint: None, None
+            y: self.parent.y + self.parent.height - self.height - 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            x: self.parent.x + 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            width: self.parent.width - 120 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            height: 75 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            Label:
+                id: filename_label
+                size_hint: None, None
+                halign: "center"
+                x: self.parent.x
+                y: self.parent.y + self.parent.height / 2 - self.height / 2
+                width: self.parent.width
+                text_size: self.width, None
+                height: max(75 * (((Window.width / 1080) + (Window.height / 1920))/2), self.texture_size[1])
+                text: ""
+                font_name: "main"
+                font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+                color: app.theme.color_neutral
+
+<CheckWorkScreen>:
+    id: check_screen
+#   Background
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+#   Navbar
+    FloatLayout:
+#       Back
+        Button:
+            size_hint: None, None
+            background_color: (0, 0, 0, 0)
+            pos: 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 93 *(((root.width / 1080) + (root.height / 1920))/2)
+            on_press:
+                root.manager.transition.direction = 'right'
+                root.manager.current = root.back()
+
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "back.png")
+                allow_stretch: True
+                color: app.theme.color_neutral_muted
+#       Home
+        Button:
+            size_hint: None, None
+            pos: root.width - self.width - 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 95 *(((root.width / 1080) + (root.height / 1920))/2)
+            background_color: (0, 0, 0, 0)
+            on_press:
+                root.manager.transition.direction = 'down'
+                root.manager.current = 'home'
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "home.png")
+                allow_stretch: True
+                color: app.theme.color_neutral_muted
+        Label:
+            id: check_title_label
+            size_hint: None, None
+            pos: root.width / 2 - self.width / 2, root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: root.width - 300 * (root.width / 1080), 95 *(((root.width / 1080) + (root.height / 1920))/2)
+            font_name: "main"
+            font_size: 60 * (((root.width / 1080) + (root.height / 1920))/2)
+            color: app.theme.color_neutral
+    ScrollView:
+        do_scroll_x: False
+        size_hint: None, None
+        width: root.width - (60 * (((root.width / 1080) + (root.height / 1920))/2))
+        height: root.height - ((205) * (((root.width / 1080) + (root.height / 1920))/2))
+        x: 30 * (((root.width / 1080) + (root.height / 1920))/2)
+        y: 30 *(((root.width / 1080) + (root.height / 1920))/2)
+        StackLayout:
+            size_hint_y: None
+            size_hint_x: 1
+            orientation: "tb-lr"
+            id: check_steps_layout
+            spacing: 40 * (((root.width / 1080) + (root.height / 1920))/2)
+
+
+<SolveEquScreen>:
+    id: solve_screen
+#   Background
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+#   Navbar
+    FloatLayout:
+#       Back
+        Button:
+            size_hint: None, None
+            background_color: (0, 0, 0, 0)
+            pos: 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 93 *(((root.width / 1080) + (root.height / 1920))/2)
+            on_press:
+                root.manager.transition.direction = 'right'
+                root.manager.current = root.back()
+
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "back.png")
+                allow_stretch: True
+                color: app.theme.color_neutral_muted
+#       Home
+        Button:
+            size_hint: None, None
+            pos: root.width - self.width - 30 * (((root.width / 1080) + (root.height / 1920))/2), root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: 95 * (((root.width / 1080) + (root.height / 1920))/2), 95 *(((root.width / 1080) + (root.height / 1920))/2)
+            background_color: (0, 0, 0, 0)
+            on_press:
+                root.manager.transition.direction = 'down'
+                root.manager.current = 'home'
+            Image:
+                size: self.parent.size
+                pos: self.parent.pos
+                source: os.path.join("themes", app.theme.theme_folder, "icons", "home.png")
+                allow_stretch: True
+                color: app.theme.color_neutral_muted
+        Label:
+            id: solution_title_label
+            size_hint: None, None
+            pos: root.width / 2 - self.width / 2, root.height - self.height - 30 * (((root.width / 1080) + (root.height / 1920))/2)
+            size: root.width - 300 * (root.width / 1080), 95 *(((root.width / 1080) + (root.height / 1920))/2)
+            font_name: "main"
+            font_size: 60 * (((root.width / 1080) + (root.height / 1920))/2)
+            color: app.theme.color_neutral
+    ScrollView:
+        do_scroll_x: False
+        size_hint: None, None
+        width: root.width - (60 * (((root.width / 1080) + (root.height / 1920))/2))
+        height: root.height - ((205) * (((root.width / 1080) + (root.height / 1920))/2))
+        x: 30 * (((root.width / 1080) + (root.height / 1920))/2)
+        y: 30 *(((root.width / 1080) + (root.height / 1920))/2)
+        StackLayout:
+            size_hint_y: None
+            size_hint_x: 1
+            orientation: "tb-lr"
+            id: solution_steps_layout
+            spacing: 40 * (((root.width / 1080) + (root.height / 1920))/2)
+
+
+<SolutionStep@Button>
+    background_normal: os.path.join("themes", app.theme.theme_folder, "boxes", "empty.png")
+    background_down: os.path.join("themes", app.theme.theme_folder, "boxes", "empty.png")
+    text: ""
+    size_hint: None, None
+    RelativeLayout:
+        pos: self.parent.pos
+        size: self.parent.size
+        ScrollView:
+            x: 30 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            y: 30 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            size_hint: None, None
+            width: self.parent.width  - 30* (((Window.width / 1080) + (Window.height / 1920))/2)
+            height: latex_image.height
+            id: latex_image_scroll
+            Image:
+                size_hint: None, None
+                id: latex_image
+                size: self.texture_size
+                source: ""
+        Label:
+            pos: 0, 0
+            id: instructions_label
+            font_name: "main"
+            halign: "center"
+            x: self.parent.width / 2 - self.width /2
+#            y: 60 * (((Window.width / 1080) + (Window.height / 1920))/2) + 80 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            y: self.parent.height - self.height - 30 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+            size_hint: None, None
+            text: ""
+            text_size: self.parent.width - 60 * (((Window.width / 1080) + (Window.height / 1920))/2), None
+            size: self.texture_size
+
+<CorrectionLabel@Label>:
+    size_hint: None, None
+    halign: "center"
+    text_size: self.width, None
+    font_name: "main"
+    font_size: 60 * (((Window.width / 1080) + (Window.height / 1920))/2)
+    size: self.texture_size
+
+
+
+<MenuButton@Button>
+
+<SettingsScreen>:
+    canvas.before:
+        Color:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    GridLayout:
+        cols:1
+
+        MenuButton:
+            text: "Back"
+            on_press:
+                root.manager.transition.direction = 'down'
+                root.manager.current = 'home'
+        GridLayout:
+            cols:2
+            Button:
+                text: "Light"
+                background_normal: 'assets/16px_rounded_button.png'
+                background_down: 'assets/16px_rounded_button_pressed.png'
+                on_press:
+                    app.conf.config.write(open('settings.ini', 'w'))
+
+            Button:
+                text: "Dark"
+                background_normal: 'assets/16px_rounded_button.png'
+                background_down: 'assets/16px_rounded_button_pressed.png'
+                on_press:
+                    app.conf.update_config()

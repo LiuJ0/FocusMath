@@ -1,0 +1,2 @@
+//HOW TO COMPILE CODE INTO DLL
+g++ -shared -std=c++11 -fPIC -Iresources/include `python3 -m pybind11 --includes` Renderer.cpp Character.cpp EquationParts.cpp -o bin/renderer`python3-config --extension-suffix` `freetype-config --static --libs` `python-config --ldflags`
